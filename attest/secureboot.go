@@ -162,10 +162,13 @@ func ParseSecurebootState(events []Event) (*SecurebootState, error) {
 
 				switch v.VarName() {
 				case "SecureBoot":
-					if len(v.VariableData) != 1 {
-						return nil, fmt.Errorf("event %d: SecureBoot data len is %d, expected 1", e.sequence, len(v.VariableData))
+					if len(v.VariableData) == 0 {
+						out.Enabled = false
+					} else if len(v.VariableData) != 1 {
+						out.Enabled = v.VariableData[0] == 1
+					} else {
+						return nil, fmt.Errorf("event %d: SecureBoot data len is %d, expected 0 or 1", e.sequence, len(v.VariableData))
 					}
-					out.Enabled = v.VariableData[0] == 1
 				case "PK":
 					if out.PlatformKeys, out.PlatformKeyHashes, err = v.SignatureData(); err != nil {
 						return nil, fmt.Errorf("event %d: failed parsing platform keys: %v", e.sequence, err)
